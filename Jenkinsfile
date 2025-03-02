@@ -20,33 +20,13 @@ pipeline {
                     env.IMAGE_TAG = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
                     sh """
                     docker build \\
-                    --build-arg TRAINSIM_SUPABASE_URL="${TRAINSIM_SUPABASE_URL}" \\
-                    --build-arg TRAINSIM_SUPABASE_KEY="${TRAINSIM_SUPABASE_KEY}" \\
-                    -t train-sim-server:latest .
+                        --build-arg TRAINSIM_SUPABASE_URL="${TRAINSIM_SUPABASE_URL}" \\
+                        --build-arg TRAINSIM_SUPABASE_KEY="${TRAINSIM_SUPABASE_KEY}" \\
+                        -t train-sim-server:latest .
                     """
-                    // Optionally, tag with 'latest' as well
-//                     sh "docker tag train-sim-server:latest"
                 }
             }
         }
-
-//         stage('Push to Registry') { // Optional, but recommended
-//             when {
-//               expression {
-//                 // Only run this stage if DOCKER_IMAGE_NAME is set, indicating a registry is used
-//                 return env.DOCKER_IMAGE_NAME != null && env.DOCKER_IMAGE_NAME != ""
-//               }
-//             }
-//             steps {
-//                 script {
-//                   withDockerRegistry([credentialsId: 'your-docker-registry-credentials', url: "https://index.docker.io/v1/"]) { //replace this if you are not using docker hub
-//                     sh "docker push ${DOCKER_IMAGE_NAME}:${env.IMAGE_TAG}"
-//                     sh "docker push ${DOCKER_IMAGE_NAME}:latest"
-//                   }
-//
-//                 }
-//             }
-//         }
         stage('Run Docker Container') {
             steps {
                 script {
