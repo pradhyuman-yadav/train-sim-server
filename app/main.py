@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api import passengers
+from app.api import passengers  # Import the passengers router
 from app.core.config import settings
-from app.core.database import get_db  # Import get_db
+from app.core.database import get_db
 from supabase import Client
 import asyncio
 
@@ -28,14 +28,6 @@ app.add_middleware(
 )
 
 app.include_router(passengers.router, prefix="/passengers", tags=["passengers"])
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Starts the background passenger generation on application startup."""
-    db: Client = get_db()  # Get the database client (important: do this *within* the event handler)
-    asyncio.create_task(passengers.continuous_passenger_generation(db))
-
 
 @app.get("/")
 async def read_root():

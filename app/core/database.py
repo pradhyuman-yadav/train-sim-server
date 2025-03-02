@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException  # Import HTTPException
+from fastapi import Depends, HTTPException
 from supabase import create_client, Client
 from app.core.config import settings
 from typing import List, Optional, Dict
@@ -22,7 +22,7 @@ async def get_all_passengers(db: Client) -> List[Passenger]:
     """Retrieves all passengers from the database."""
     try:
         data = db.table("passengers").select("*").execute()
-        return [Passenger(**item) for item in data.data]  # Access data directly
+        return [Passenger(**item) for item in data.data]
     except Exception as e:
         logger.exception("Error getting all passengers:")
         raise HTTPException(status_code=500, detail="Failed to retrieve passengers")
@@ -37,10 +37,14 @@ async def get_passenger(db: Client, passenger_id: str) -> Optional[Passenger]:
     except Exception as e:
         logger.exception(f"Error getting passenger with ID {passenger_id}:")
         raise HTTPException(status_code=500, detail="Failed to retrieve passenger")
+
 async def create_passenger(db: Client, passenger: PassengerCreate) -> Passenger:
     """Creates a new passenger."""
     try:
-        data = db.table("passengers").insert(passenger.dict()).execute()
+        # Set current_station_id to origin_station_id on creation
+        passenger_data = passenger.dict()
+        passenger_data["current_station_id"] = passenger_data["origin_station_id"]
+        data = db.table("passengers").insert(passenger_data).execute()
         return Passenger(**data.data[0])
     except Exception as e:
         logger.exception("Error creating passenger:")
@@ -82,7 +86,18 @@ async def get_station_ids(db: Client = Depends(get_db)) -> List[str]:
     """Fetches all station IDs from the Supabase database."""
     try:
         data = db.table("stations").select("id").execute()
-        return [item['id'] for item in data.data]  # Access data directly
+        return [item['id'] for item in data.data]
     except Exception as e:
         logger.exception("Error getting station IDs:")
         raise HTTPException(status_code=500, detail="Failed to retrieve station IDs")
+
+async def get_station_names(db: Client) -> Dict[str, str]:
+    """Fetches all station IDs and names, returning a dictionary."""
+    try:
+        data = db.table("stations").select("id, name").execute()
+        if data.error:
+            raise Exception(data.error)
+        return {item['id']: item['name'] for item in data.data}  # Create the dictionary
+    except Exception as e:
+        logger.exception("Error getting station names:")
+        raise HTTPException(status_code=500, detail="Failed to retrieve station names")

@@ -9,7 +9,8 @@ class PassengerStatus(str, Enum):
     boarding = "boarding"
     in_transit = "in_transit"
     arrived = "arrived"
-    exited = "exited"
+    exited = "exited"  # Add 'exited' for passengers who leave
+    impatient = "impatient" # Add 'impatient' status
 
 class TicketType(str, Enum):
     adult = "adult"
@@ -34,12 +35,12 @@ class PassengerBase(BaseModel):
     luggage_size: Optional[LuggageSize] = None
     email: Optional[str] = None
     phone_number: Optional[str] = None
-    patience: Optional[int] = None  # Make patience optional
-    status: PassengerStatus = PassengerStatus.waiting # Set default status
+    patience: Optional[int] = None  # Now required for creation
+    status: PassengerStatus = PassengerStatus.waiting
 
     @validator('email', pre=True, always=True)
     def validate_email(cls, v):
-        if v == "":  # Allow for empty strings to become None
+        if v == "":
             return None
         return v
 
@@ -50,7 +51,7 @@ class PassengerBase(BaseModel):
         return v
 
 class PassengerCreate(PassengerBase):
-    pass
+    patience: int  # Make patience required on creation
 
 class PassengerUpdate(PassengerBase):
     # Make all fields optional for updates
@@ -68,15 +69,16 @@ class PassengerUpdate(PassengerBase):
     luggage_size: Optional[LuggageSize] = None
     email: Optional[str] = None
     phone_number: Optional[str] = None
-     # Optional: Validate email format if provided
+    patience: Optional[int] = None # Allow updating patience
 
 
 class Passenger(PassengerBase):
     id: str
     spawn_time: datetime
-    current_station_id: Optional[str] = None
+    current_station_id: Optional[str] = None  # Initially same as origin
     train_id: Optional[str] = None
     board_time: Optional[datetime] = None
     arrival_time: Optional[datetime] = None
+
     class Config:
         from_attributes = True
