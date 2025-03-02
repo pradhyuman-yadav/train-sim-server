@@ -4,6 +4,7 @@ pipeline {
     environment {
         TRAINSIM_SUPABASE_URL = credentials('TRAINSIM_SUPABASE_URL')
         TRAINSIM_SUPABASE_KEY = credentials('TRAINSIM_SUPABASE_KEY')
+        IMAGE_NAME = "train-sim-server"
     }
 
     stages {
@@ -16,12 +17,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    sh """
-                    docker build \\
-                        --build-arg TRAINSIM_SUPABASE_URL="${TRAINSIM_SUPABASE_URL}" \\
-                        --build-arg TRAINSIM_SUPABASE_KEY="${TRAINSIM_SUPABASE_KEY}" \\
-                        -t train-sim-server:latest .
-                    """
+                    sh "docker build -t train-sim-server:latest ."
                 }
             }
         }
@@ -39,12 +35,11 @@ pipeline {
 
                     // Run the new container, using --env-file for runtime secrets
                     sh """
-                    docker run --network host -v /proc:/host_proc -e HOST_PROC=/host_proc -d \\
-                        --name train-sim-server \\
-                        -p 8000:8000 \\
-                        -e TRAINSIM_SUPABASE_URL="${TRAINSIM_SUPABASE_URL}" \\
-                        -e TRAINSIM_SUPABASE_KEY="${TRAINSIM_SUPABASE_KEY}" \\
-                        train-sim-server:latest
+                    docker run -d --name ${IMAGE_NAME} -p 8000:8000 \\
+                        -e TRAINSIM_SUPABASE_URL=${TRAINSIM_SUPABASE_URL} \\
+                        -e TRAINSIM_SUPABASE_KEY=${TRAINSIM_SUPABASE_KEY} \\
+                        --network=host \\
+                        ${IMAGE_NAME}:latest
                     """
                 }
             }
