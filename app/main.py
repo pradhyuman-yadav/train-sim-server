@@ -14,8 +14,7 @@ app = FastAPI(
 
 # CORS (Cross-Origin Resource Sharing)
 origins = [
-    "http://localhost:3000",  # Your Next.js frontend
-    "http://localhost",
+    "*"
     # Add other origins as necessary
 ]
 
