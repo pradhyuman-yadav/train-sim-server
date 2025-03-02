@@ -16,8 +16,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Tag the image with the commit SHA
-                    env.IMAGE_TAG = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
                     sh """
                     docker build \\
                         --build-arg TRAINSIM_SUPABASE_URL="${TRAINSIM_SUPABASE_URL}" \\
@@ -27,6 +25,7 @@ pipeline {
                 }
             }
         }
+        
         stage('Run Docker Container') {
             steps {
                 script {
@@ -48,12 +47,6 @@ pipeline {
                         train-sim-server:latest
                     """
                 }
-            }
-        }
-
-        stage('Cleanup') { // Optional
-            steps {
-                sh "ssh -o StrictHostKeyChecking=no $SSH_AGENT_USR@${HOME_SERVER_IP} 'docker image prune -a --volumes'" // Remove dangling images
             }
         }
     }
