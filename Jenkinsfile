@@ -35,7 +35,7 @@ pipeline {
 
                     // Run the new container, using --env-file for runtime secrets
                     sh """
-                    docker run -d --name ${IMAGE_NAME} -p 8000:8000 \\
+                    docker run -d --name ${IMAGE_NAME} -p 7000:7000 \\
                         -e TRAINSIM_SUPABASE_URL=${TRAINSIM_SUPABASE_URL} \\
                         -e TRAINSIM_SUPABASE_KEY=${TRAINSIM_SUPABASE_KEY} \\
                         --network=host \\
