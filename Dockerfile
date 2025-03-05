@@ -26,4 +26,8 @@ EXPOSE 7000
 ENV PYTHONPATH=/app
 
 # Run uvicorn when the container launches
-CMD ["uvicorn", "app.main:app", "--port", "7000"]
+#CMD ["uvicorn", "app.main:app", "--port", "7000"]
+
+COPY run.sh /usr/src/fastapi/
+
+CMD sh run.sh
