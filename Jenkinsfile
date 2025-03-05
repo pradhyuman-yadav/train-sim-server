@@ -27,20 +27,25 @@ pipeline {
                 script {
                     // Stop/remove any old container (with proper error handling)
                     try {
-                        sh 'docker rm -f train-sim-server'
-                    } catch (Exception e) {
-                        echo "Container 'train-sim-server' did not exist or could not be removed. Continuing..."
-                        // Optionally, log the full exception:  echo e.getMessage()
+                        sh "docker stop ${IMAGE_NAME}" // First try to stop gracefully
+                    } catch (Exception e1) {
+                        echo "Container '${IMAGE_NAME}' was not running.  Trying to remove..."
+                    }
+                    try {
+                        sh "docker rm ${IMAGE_NAME}" // Then remove
+                    } catch (Exception e2) {
+                        echo "Container '${IMAGE_NAME}' did not exist or could not be removed. Continuing..."
                     }
 
-                    // Run the new container, using --env-file for runtime secrets
+                    // Run the new container, passing secrets as environment variables.
                     sh """
                     docker run -d --name ${IMAGE_NAME} -p 7000:7000 \\
                         -e TRAINSIM_SUPABASE_URL=${TRAINSIM_SUPABASE_URL} \\
                         -e TRAINSIM_SUPABASE_KEY=${TRAINSIM_SUPABASE_KEY} \\
-                        --network=host \\
                         ${IMAGE_NAME}:latest
                     """
+                    // Removed --network=host.  This is generally NOT recommended unless absolutely necessary
+                    // and can introduce security risks.  Port mapping (-p 7000:7000) is the preferred way.
                 }
             }
         }
