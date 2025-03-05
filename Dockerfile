@@ -26,29 +26,4 @@ EXPOSE 7000
 ENV PYTHONPATH=/app
 
 # Run uvicorn when the container launches
-CMD ["uvicorn app.main:app --port 7000"]
-
-# Make run.sh executable
-#RUN chmod +x run.sh
-
-# Use the run.sh script as the command
-#CMD ["run.sh"]
-#
-#FROM python:3.12-slim
-#
-#WORKDIR /app
-#
-#COPY requirements.txt /app/
-#RUN pip install --no-cache-dir -r requirements.txt
-#
-## Copy the entire project into the container
-#COPY . /app/
-#
-#EXPOSE 7000
-#ENV PYTHONPATH=/app
-#
-## Make run.sh executable
-#RUN chmod +x /app/run.sh
-#
-## Use the run.sh script as the command
-#CMD ["/app/run.sh"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7000"]
