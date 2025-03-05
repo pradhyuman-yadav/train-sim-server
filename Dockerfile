@@ -26,13 +26,13 @@ EXPOSE 7000
 ENV PYTHONPATH=/app
 
 # Run uvicorn when the container launches
-#CMD ["uvicorn", "app.main:app", "--port", "7000"]
+CMD ["uvicorn app.main:app --port 7000"]
 
 # Make run.sh executable
-RUN chmod +x run.sh
+#RUN chmod +x run.sh
 
 # Use the run.sh script as the command
-CMD ["run.sh"]
+#CMD ["run.sh"]
 #
 #FROM python:3.12-slim
 #
