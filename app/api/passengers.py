@@ -42,9 +42,11 @@ def calculate_satisfaction() -> float:
     if total_passengers_generated == 0:
         return 100.0  # If no passengers, assume 100% satisfaction
 
-    # Consider passengers who left due to impatience as unsatisfied
-    successful_passengers = passengers_arrived
-    return (successful_passengers / total_passengers_generated) * 100 if total_passengers_generated else 100.0
+    # Correctly calculate successful passengers by subtracting impatient ones.
+    successful_passengers = total_passengers_generated - passengers_impatient
+
+    # Ensure we don't divide by zero (though the initial check should prevent this).
+    return (successful_passengers / total_passengers_generated) * 100 if total_passengers_generated > 0 else 100.0
 
 
 # --- Passenger Generation Functions ---
@@ -147,24 +149,33 @@ async def check_passenger_patience(db: Client):
                 .execute()
             )
             if expired_passengers_data.data:
-              for passenger in expired_passengers_data.data:
-                spawn_time = datetime.fromisoformat(passenger['spawn_time'])
-                # --- HANDLE NONE PATIENCE ---
-                if passenger['patience'] is not None:  # Check for None!
-                    if (now - spawn_time) > timedelta(seconds=passenger['patience']):
-                        passengers_impatient += 1
-                        # Update the passenger's status to 'impatient'
-                        try:  # Add a try...except here
-                            update_data = (
-                                db.table("passengers")
-                                .update({"status": "impatient"})
-                                .eq("id", passenger["id"])
-                                .execute()
-                            )
-                        except Exception as update_error: #Catching specific update error
-                            logger.exception(f"Error updating passenger status for ID {passenger['id']}:")
+                for passenger in expired_passengers_data.data:
+                    spawn_time = datetime.fromisoformat(passenger['spawn_time'])
+                    # --- HANDLE NONE PATIENCE ---
+                    if passenger['patience'] is not None:  # Check for None!
+                        if (now - spawn_time) > timedelta(seconds=passenger['patience']):
+                            passengers_impatient += 1
+                            # Update the passenger's status to 'impatient' AND delete  <-- THIS IS THE KEY CHANGE
+                            try:  # Add a try...except here
+                                # First, attempt to update the status (optional, but good for record-keeping)
+                                update_data = (
+                                    db.table("passengers")
+                                    .update({"status": "impatient"})
+                                    .eq("id", passenger["id"])
+                                    .execute()
+                                )
+                                # Then, delete the passenger
+                                delete_data = (
+                                    db.table("passengers")
+                                    .delete()
+                                    .eq("id", passenger["id"])
+                                    .execute()
+                                )
+                                if not delete_data.data:
+                                     logger.warning(f"No passenger found with ID {passenger['id']} to delete.")
 
-                # --- END HANDLE NONE ---
+                            except Exception as update_error: #Catching specific update error
+                                logger.exception(f"Error updating/deleting passenger status for ID {passenger['id']}:")
 
             await asyncio.sleep(5)  # Check every 5 seconds
 
